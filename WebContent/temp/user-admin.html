@@ -1,0 +1,299 @@
+<div id="user-admin" class="easyui-layout" data-options="fit:true">
+    <!-- Begin of toolbar -->
+    <div id="user-admin-toolbar-user">
+        <div class="user-admin-toolbar-button">
+            <a href="#" class="easyui-linkbutton" iconCls="icon-add" onclick="openAdd()" plain="true">添加</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-edit" onclick="openEdit()" plain="true">修改</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-remove" onclick="removeUser()" plain="true">删除</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-cancel" onclick="cancel()" plain="true">取消</a>
+        </div>
+        <div class="user-admin-toolbar-search-user">
+        	<form id="user-admin-form-1" method="post">
+	        	<label>员工姓名：</label>
+	        	<input id="search-userID" name="userID" class="user-admin-text" style="width:100px">
+	            <label>部门：</label> 
+	            <input id="search-deptName-input" class="easyui-combobox" name="deptID" style="width:160px;" 
+		    			data-options="valueField:'departmentID',textField:'departmentName',url:'loadDept.action',method:'get'">
+	            
+	            <a id="search-user-a" href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-search">开始检索</a>
+            </form>
+        </div>
+    </div>
+    <!-- End of toolbar -->
+    <table id="user-admin-datagrid-user" class="easyui-datagrid" toolbar="#user-admin-toolbar-2"></table>
+</div>
+<!-- Begin of easyui-dialog -->
+<div id="edit-user-dialog" class="easyui-dialog" data-options="closed:true,iconCls:'icon-save'" style="width:300px; padding:10px;">
+	<form id="user-admin-form-edit" method="post">
+        <table>
+        	<tr>
+                <td width="80" align="right">用户ID:</td>
+                <td><input id="userID" type="text" name="userID" class="user-admin-text" style="width:150px"/></td>
+            </tr>
+            <tr>
+                <td width="80" align="right">用户名:</td>
+                <td><input id="userName" type="text" name="userName" class="user-admin-text" style="width:150px"/></td>
+            </tr>
+            <tr>
+                <td width="80" align="right">锁定/解锁:</td>
+                <td>
+					<select id="locked-select" name="locked" class="easyui-combobox" panelHeight="auto" style="width:160px">
+		                <option value="0">解锁</option>
+		                <option value="1" selected="selected">锁定</option>
+		            </select>
+				</td>
+            </tr>
+            <tr>
+                <td width="80" align="right">修改账号等级:</td>
+                <td>
+					<select id="roleID-select" name="roleID" class="easyui-combobox" panelHeight="auto" style="width:160px">
+		                <option value="1">A级管理员</option>
+		                <option value="2" selected="selected">B级管理员</option>
+		            </select>
+				</td>
+            </tr>
+        </table>
+    </form>
+</div>
+<div id="add-user-dialog" class="easyui-dialog" data-options="closed:true,iconCls:'icon-save'" style="width:400px; padding:10px;">
+	<form id="user-admin-form-add" method="post">
+        <table>
+            <tr>
+                <td width="80" align="right">用户名:</td>
+                <td><input type="text" name="userName" class="user-admin-text" style="width:150px"/><i id="error-message-i"></i></td>
+            </tr>
+            <tr>
+                <td width="80" align="right">部门/科室:</td>
+                <td>
+					<input id="search-deptName-input" class="easyui-combobox" name="deptID" style="width:160px;" 
+		    			data-options="valueField:'departmentID',textField:'departmentName',url:'loadDept.do',method:'get'">
+				</td>
+            </tr>
+            <tr>
+                <td width="80" align="right">账号等级:</td>
+                <td>
+					<select name="roleID" class="easyui-combobox" panelHeight="auto" style="width:160px">
+		                <option value="1">A级管理员</option>
+		                <option value="2">B级管理员</option>
+		            </select>
+				</td>
+            </tr>
+        </table>
+    </form>
+</div>
+<!-- End of easyui-dialog -->
+<script type="text/javascript">
+	//如：{Name:'摘取天上星',position:'IT技术'}
+	//ps:注意将同名的放在一个数组里
+	/**
+	* getFormJson可以将一个form表单中所有的信息取到，返回一个JS对象
+	*/
+	function getFormJson(form) {
+		var o = {};
+		var a = $(form).serializeArray();
+		$.each(a, function () {
+			if (o[this.name] !== undefined) {
+				if (!o[this.name].push) {
+					o[this.name] = [o[this.name]];
+				}
+				o[this.name].push(this.value || '');
+			} else {
+				o[this.name] = this.value || '';
+			}
+		});
+		return o;
+	}
+	/**
+	* Name 添加记录
+	*/
+	function add(){
+		//通过调用jQuery中的方法，向服务器发送post请求
+		$.post("addUser.do", //请求URL
+			getFormJson($('#user-admin-form-add')),//调用上方的getFormJson方法，将form表单中的信息作为参数
+          	function(data){//响应成功(200)后，会自动执行该方法，并将服务器异步响应的数据保存至data参数里
+				if(data.status==1){
+					$.messager.alert('信息提示',data.responseText,'info');//弹出对话框显示信息
+					$('#add-user-dialog').dialog('close');//关闭对话框
+					$('#user-admin-datagrid-user').datagrid('reload');//重新加载数据表格
+				}
+				else
+				{
+					$("#error-message-i").text(data.responseText);
+				}
+			},
+			"json"//设置响应数据类型的格式给JSON
+        );
+	}
+	
+	/**
+	* Name 修改记录
+	*/
+	function edit(){
+		$.post("editUser.do", //发送post请求到后台
+			getFormJson($('#user-admin-form-edit')),//将表单数据作为参数
+          	function(data){
+				if(data.status==1){//修改动作成功
+					$.messager.alert('信息提示',data.responseText,'info');
+					$('#edit-user-dialog').dialog('close');
+					$('#user-admin-datagrid-user').datagrid('reload')//重新加载表格数据
+				}
+				else{
+					$("#error-message-i").text(data.responseText);
+					$('#edit-user-dialog').dialog('close');
+					//$.messager.alert('信息提示',data.responseText,'info');
+				}
+			},
+			"json"
+        );
+	}
+	
+	/**
+	* 移除用户方法
+	*/
+	function removeUser(){
+		var item = $('#user-admin-datagrid-user').datagrid('getSelected');//取得当前被选行数据，保存在tiem对象中；若未选中则返回null
+		if(item!=null){
+			$.messager.confirm('信息提示','确定要删除该记录？', function(result){//弹出确认对话框，只有点击确定才执行function
+				if(result){
+					var userID = item.userID//取到该用户ID
+					$.ajax({//发送ajax请求到后台服务器
+						url:'removeUser.do',//请求url
+						data:'userID='+userID,//参数
+						dataType:'json',//返回数据类型为json
+						success:function(data){
+							if(data.status==1){
+								$.messager.alert('信息提示',data.responseText,'info');
+								$('#user-admin-dialog-2').dialog('close');
+								$('#user-admin-datagrid-user').datagrid('reload')
+							}
+							else
+							{
+								$.messager.alert('信息提示',data.responseText,'info');
+							}
+						}	
+					});
+				}	
+			});
+		}else{
+			$.messager.alert("操作提示", "请先选择要删除的行！","warning"); 
+		}
+	}
+	
+	/**
+	* 打开添加窗口
+	*/
+	function openAdd(){
+		//清除id属性为user-admin-form-add的form表单中输入控件的内容
+		$('#user-admin-form-add').form('clear');
+		//打开清除id属性为add-user-dialog的对话框
+		$('#add-user-dialog').dialog({
+			closed: false,
+			modal:true,
+            title: "添加用户",//对话框标题
+            buttons: [{//确定按钮
+                text: '确定',
+                iconCls: 'icon-ok',
+                handler: add//点击确定调用上方的add方法
+            }, {
+                text: '取消',//取消按钮
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    $('#add-user-dialog').dialog('close');//点击取消关闭对话框                    
+                }
+            }]
+        });
+	}
+	
+	/**
+	* Name 打开修改窗口
+	*/
+	function openEdit(){
+		$('#user-admin-form-edit').form('clear');//清除表单控件内容
+		var item = $('#user-admin-datagrid-user').datagrid('getSelected');//取得当前被选行数据，保存在tiem对象中；若未选中则返回null
+		if(item!=null){//如果item不为null
+			//设置ID和用户名的默认值
+			$("#user-admin-form-edit #userID").val(item.userID)
+			$("#user-admin-form-edit #userName").val(item.userName)
+			//锁定或解锁select默认选择解锁
+			$('#locked-select').combobox('setValue', $('#locked-select option')[0].value);
+			//修改用户等级select默认选择二级管理员
+			$('#roleID-select').combobox('setValue', $('#roleID-select option')[1].value);
+			$('#edit-user-dialog').dialog({
+				closed: false,
+				modal:true,
+	            title: "修改信息",
+	            buttons: [{
+	                text: '确定',
+	                iconCls: 'icon-ok',
+	                handler: edit//点击确定执行edit方法
+	            }, {
+	                text: '取消',
+	                iconCls: 'icon-cancel',
+	                handler: function () {
+	                    $('#edit-user-dialog').dialog('close');                    
+	                }
+	            }]
+	        });
+		}else{//若item为null，则提示用户选择
+			$.messager.alert("操作提示", "请先选择要修改的行！","warning"); 
+		}
+	}	
+	
+	/**
+	* 所有页面pagerFilter方法均为实现easyui分页
+	*/
+	function pagerFilter(data){            
+		if (typeof data.length == 'number' && typeof data.splice == 'function'){// is array                
+			data = {                   
+				total: data.length,                   
+				rows: data               
+			}            
+		}        
+		var dg = $(this);         
+		var opts = dg.datagrid('options');          
+		var pager = dg.datagrid('getPager');          
+		pager.pagination({                
+			onSelectPage:function(pageNum, pageSize){                 
+				opts.pageNumber = pageNum;                   
+				opts.pageSize = pageSize;                
+				pager.pagination('refresh',{pageNumber:pageNum,pageSize:pageSize});                  
+				dg.datagrid('loadData',data);                
+			}          
+		});           
+		if (!data.originalRows){               
+			data.originalRows = (data.rows);       
+		}         
+		var start = (opts.pageNumber-1)*parseInt(opts.pageSize);          
+		var end = start + parseInt(opts.pageSize);        
+		data.rows = (data.originalRows.slice(start, end));         
+		return data;       
+	}
+	
+	/**
+	* Name 载入数据
+	*/
+	$("#search-user-a").click(function(){//点击检索按钮调用该方法
+		$('#user-admin-datagrid-user').datagrid({//easyui-datagrid应用方法
+			url:'loadEmp.action?'+$('#user-admin-form-1').serialize(),//将查询条件作为参数发送异步请求
+			method:'GET',//请求方式为get
+			loadFilter:pagerFilter,	//执行分页方法进行分页操作	
+			rownumbers:true,//是否显示行号
+			pageSize:10,//设置一页显示十行           
+			pagination:true,//手否加分页
+			multiSort:true,//是否允许多列排序、忽略这个属性
+			fitColumns:true,
+			fit:false,//
+			singleSelect: true,//设置只允许单行选择
+			columns:[[
+				{ checkbox:true},
+				{ field:'userID',title:'用户编号',width:100,sortable:true},
+				{ field:'userName',title:'用户名',width:100,sortable:true},
+				{ field:'roleName',title:'级别',width:100,sortable:true},
+				{ field:'buildDate',title:'账号创建时间',width:100},
+				/* { field:'lastTime',title:'上次登录时间',width:100},
+				{ field:'locked',title:'是否锁定',width:100}, */
+				{ field:'departmentName',title:'部门',width:100}
+			]]
+		});
+	})
+</script>

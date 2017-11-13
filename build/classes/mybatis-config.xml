@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE configuration
+    PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<!-- 为自定义类型起别名 -->
+	<typeAliases>
+		<typeAlias type="com.jiayidai.assess.entity.Emp"
+			alias="Emp" />
+	</typeAliases>
+	<mappers>
+		<mapper resource="com/jiayidai/assess/mapper/EmpMapper.xml" />
+	</mappers>
+</configuration>

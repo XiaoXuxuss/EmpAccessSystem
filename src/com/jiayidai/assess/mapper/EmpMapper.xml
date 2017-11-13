@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiayidai.assess.mapper.EmpMapper">
+
+	
+
+	<select id="login" statementType="PREPARED" parameterType="Emp" resultType="Emp">
+		SELECT username,role_id as roleId FROM empinfo WHERE user_id=#{userId} AND password=#{password}
+	</select>
+	
+	<select id="loadEmp" statementType="PREPARED" parameterType="Emp" resultType="List">
+		SELECT * FROM empinfo
+		<where>
+		<if test="username!=null">
+			AND username=#{username}
+		</if>
+		<if test="deptId!=0">
+			AND dept_id=#{deptId}
+		</if>
+		</where>
+	</select>
+
+</mapper>
